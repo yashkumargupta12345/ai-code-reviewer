@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import StatCard from "./StatCard";
 import PRList from "./PRList";
 
-const BACKEND_URL = "http://127.0.0.1:8000";
+const BACKEND_URL = "https://ai-code-reviewer-backend-lrfl.onrender.com";
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
