@@ -90,4 +90,4 @@ npm start
 - No sensitive data in codebase
 
 ## 👨‍💻 Author
-Yash Kumar Gupta — [GitHub](https://github.com/yashkumargupta12345)
+Yash Kumar Gupta
