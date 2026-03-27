@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import StatCard from "./StatCard";
 import PRList from "./PRList";
+import { RatingPieChart, SeverityBarChart, PRTimelineChart } from "./Charts";
 
 const BACKEND_URL = "https://ai-code-reviewer-backend-lrfl.onrender.com";
 
@@ -151,6 +152,26 @@ function Dashboard() {
                 color="#1a7f37"
               />
             </div>
+
+            {/* Charts Section */}
+            {stats && stats.reviews && stats.reviews.length > 0 && (
+            <div style={{ marginBottom: "32px" }}>
+
+              {/* Pie + Bar side by side */}
+              <div style={{
+                display: "flex",
+                gap: "20px",
+                marginBottom: "20px",
+                flexWrap: "wrap"
+            }}>
+                <RatingPieChart reviews={stats.reviews} />
+                <SeverityBarChart reviews={stats.reviews} />
+              </div>
+
+              {/* Timeline full width */}
+              <PRTimelineChart reviews={stats.reviews} />
+              </div>
+              )}
 
             {/* PR List */}
             <div style={{
