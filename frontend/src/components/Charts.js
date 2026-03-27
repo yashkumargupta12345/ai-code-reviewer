@@ -23,13 +23,15 @@ export function RatingPieChart({ reviews }) {
 
   return (
     <div style={{
-      background: "white",
+      background: "#161b22",
+      border: "1px solid #30363d",
       borderRadius: "12px",
       padding: "24px",
       boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      flex: 1
+      flex: 1,
+      color: "#e6edf3"
     }}>
-      <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>
+      <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px", color: "#8b949e" }}>
         📊 Rating Distribution
       </div>
       <ResponsiveContainer width="100%" height={250}>
@@ -67,13 +69,15 @@ export function SeverityBarChart({ reviews }) {
 
   return (
     <div style={{
-      background: "white",
+      background: "#161b22",
+      border: "1px solid #30363d",
       borderRadius: "12px",
       padding: "24px",
       boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      flex: 1
+      flex: 1,
+      color: "#e6edf3"  
     }}>
-      <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>
+      <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px", color: "#8b949e" }}>
         🎯 Severity Scores
       </div>
       <ResponsiveContainer width="100%" height={250}>
@@ -110,13 +114,15 @@ export function PRTimelineChart({ reviews }) {
 
   return (
     <div style={{
-      background: "white",
+      background: "#161b22",
+      border: "1px solid #30363d",
       borderRadius: "12px",
       padding: "24px",
       boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-      width: "100%"
+      width: "100%",
+      color: "#e6edf3" 
     }}>
-      <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px" }}>
+      <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px", color: "#8b949e" }}>
         📈 PRs Reviewed Over Time
       </div>
       <ResponsiveContainer width="100%" height={250}>

@@ -1,10 +1,184 @@
 import { useState, useEffect } from "react";
-import StatCard from "./StatCard";
-import PRList from "./PRList";
 import { RatingPieChart, SeverityBarChart, PRTimelineChart } from "./Charts";
 
 const BACKEND_URL = "https://ai-code-reviewer-backend-lrfl.onrender.com";
 
+// ─── Stat Card ────────────────────────────────────────────────────────────────
+function StatCard({ title, value, emoji, color, subtitle }) {
+  return (
+    <div style={{
+      background: "#161b22",
+      border: "1px solid #30363d",
+      borderRadius: "12px",
+      padding: "20px 24px",
+      flex: 1,
+      minWidth: "160px",
+      position: "relative",
+      overflow: "hidden",
+      transition: "transform 0.2s, border-color 0.2s",
+      cursor: "default"
+    }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = "translateY(-4px)";
+        e.currentTarget.style.borderColor = color;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.borderColor = "#30363d";
+      }}
+    >
+      {/* Glow effect */}
+      <div style={{
+        position: "absolute",
+        top: 0, left: 0, right: 0,
+        height: "3px",
+        background: color,
+        borderRadius: "12px 12px 0 0"
+      }} />
+
+      <div style={{ fontSize: "28px", marginBottom: "8px" }}>{emoji}</div>
+      <div style={{
+        fontSize: "32px",
+        fontWeight: "700",
+        color: color,
+        lineHeight: 1
+      }}>{value}</div>
+      <div style={{
+        fontSize: "14px",
+        color: "#8b949e",
+        marginTop: "6px",
+        fontWeight: "500"
+      }}>{title}</div>
+      {subtitle && (
+        <div style={{
+          fontSize: "12px",
+          color: "#6e7681",
+          marginTop: "4px"
+        }}>{subtitle}</div>
+      )}
+    </div>
+  );
+}
+
+// ─── PR List Item ─────────────────────────────────────────────────────────────
+function PRItem({ review }) {
+  const ratingColor = {
+    good: "#3fb950",
+    needs_work: "#d29922",
+    critical: "#f85149"
+  }[review.rating] || "#8b949e";
+
+  const ratingEmoji = {
+    good: "✅",
+    needs_work: "⚠️",
+    critical: "🚨"
+  }[review.rating] || "⚠️";
+
+  const scoreColor = review.severity_score >= 8 ? "#f85149" :
+                     review.severity_score >= 5 ? "#d29922" : "#3fb950";
+
+  return (
+    <div style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "16px 20px",
+      borderBottom: "1px solid #21262d",
+      transition: "background 0.15s",
+      flexWrap: "wrap",
+      gap: "12px"
+    }}
+      onMouseEnter={e => e.currentTarget.style.background = "#161b22"}
+      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+    >
+      {/* Left side */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <span style={{ fontSize: "20px" }}>🔀</span>
+        <div>
+          <div style={{
+            fontWeight: "600",
+            color: "#e6edf3",
+            fontSize: "15px"
+          }}>
+            PR #{review.pr_number}
+            <span style={{
+              marginLeft: "8px",
+              fontSize: "12px",
+              background: `${ratingColor}22`,
+              color: ratingColor,
+              padding: "2px 8px",
+              borderRadius: "12px",
+              border: `1px solid ${ratingColor}44`
+            }}>
+              {ratingEmoji} {review.rating?.replace("_", " ").toUpperCase()}
+            </span>
+          </div>
+          <div style={{
+            fontSize: "13px",
+            color: "#8b949e",
+            marginTop: "2px"
+          }}>
+            {review.repo_name} • {review.reviewed_at}
+          </div>
+        </div>
+      </div>
+
+      {/* Right side */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        {/* Severity Score */}
+        <div style={{
+          background: `${scoreColor}22`,
+          border: `1px solid ${scoreColor}44`,
+          color: scoreColor,
+          padding: "4px 12px",
+          borderRadius: "20px",
+          fontSize: "13px",
+          fontWeight: "600"
+        }}>
+          {review.severity_score}/10
+        </div>
+
+        {/* Language Badge */}
+        {review.language && review.language !== "unknown" && (
+          <div style={{
+            background: "#1f6feb22",
+            border: "1px solid #1f6feb44",
+            color: "#79c0ff",
+            padding: "4px 12px",
+            borderRadius: "20px",
+            fontSize: "13px"
+          }}>
+            {review.language}
+          </div>
+        )}
+
+        {/* View PR Button */}
+        
+          <a href={`https://github.com/${review.repo_name}/pull/${review.pr_number}`}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            background: "#238636",
+            color: "white",
+            padding: "6px 16px",
+            borderRadius: "6px",
+            textDecoration: "none",
+            fontSize: "13px",
+            fontWeight: "500",
+            border: "1px solid #2ea043",
+            transition: "background 0.15s"
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = "#2ea043"}
+          onMouseLeave={e => e.currentTarget.style.background = "#238636"}
+        >
+          View PR →
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Dashboard ───────────────────────────────────────────────────────────
 function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,209 +188,274 @@ function Dashboard() {
   const fetchStats = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/stats`);
-      if (!response.ok) throw new Error("Server se data nahi aaya!");
+      if (!response.ok) throw new Error("Server error!");
       const data = await response.json();
       setStats(data);
       setLastUpdated(new Date().toLocaleTimeString());
       setError(null);
     } catch (err) {
-      setError("Backend server se connect nahi ho pa raha! Server chala hai?");
+      setError("Backend connect nahi ho raha!");
     } finally {
       setLoading(false);
     }
   };
 
-  // Page load pe fetch karo
   useEffect(() => {
     fetchStats();
-    // Har 10 seconds mein auto refresh
     const interval = setInterval(fetchStats, 10000);
     return () => clearInterval(interval);
   }, []);
 
+  // Stats calculate karo
+  const criticalCount = stats?.reviews?.filter(r => r.rating === "critical").length || 0;
+  const avgScore = stats?.reviews?.length
+    ? (stats.reviews.reduce((a, b) => a + b.severity_score, 0) / stats.reviews.length).toFixed(1)
+    : 0;
+
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#f6f8fa",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    }}>
+    <div style={{ minHeight: "100vh", background: "#0d1117" }}>
 
-      {/* Header */}
+      {/* ── Header ── */}
       <div style={{
-        background: "#24292f",
-        color: "white",
-        padding: "16px 32px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between"
+        background: "#161b22",
+        borderBottom: "1px solid #30363d",
+        padding: "0 32px",
+        position: "sticky",
+        top: 0,
+        zIndex: 100
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <span style={{ fontSize: "28px" }}>🤖</span>
-          <div>
-            <div style={{ fontSize: "20px", fontWeight: "700" }}>
-              AI Code Reviewer
-            </div>
-            <div style={{ fontSize: "13px", color: "#8b949e" }}>
-              Powered by Groq + Llama 3
-            </div>
-          </div>
-        </div>
-
-        {/* Server Status */}
         <div style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
           display: "flex",
           alignItems: "center",
-          gap: "8px",
-          background: error ? "#ff000022" : "#23863622",
-          padding: "8px 16px",
-          borderRadius: "20px"
+          justifyContent: "space-between",
+          height: "64px"
         }}>
-          <div style={{
-            width: "8px",
-            height: "8px",
-            borderRadius: "50%",
-            background: error ? "#f85149" : "#3fb950"
-          }} />
-          <span style={{ fontSize: "13px", color: error ? "#f85149" : "#3fb950" }}>
-            {error ? "Offline" : "Online"}
-          </span>
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "24px" }}>🤖</span>
+            <div>
+              <span style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                color: "#e6edf3"
+              }}>AI Code Reviewer</span>
+              <span style={{
+                marginLeft: "8px",
+                fontSize: "12px",
+                background: "#1f6feb22",
+                color: "#79c0ff",
+                padding: "2px 8px",
+                borderRadius: "12px",
+                border: "1px solid #1f6feb44"
+              }}>Beta</span>
+            </div>
+          </div>
+
+          {/* Right side */}
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            {/* Status */}
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div style={{
+                width: "8px", height: "8px",
+                borderRadius: "50%",
+                background: error ? "#f85149" : "#3fb950",
+                boxShadow: error ? "0 0 6px #f85149" : "0 0 6px #3fb950"
+              }} />
+              <span style={{
+                fontSize: "13px",
+                color: error ? "#f85149" : "#3fb950"
+              }}>
+                {error ? "Offline" : "Live"}
+              </span>
+            </div>
+
+            {lastUpdated && (
+              <span style={{ fontSize: "12px", color: "#6e7681" }}>
+                Updated {lastUpdated}
+              </span>
+            )}
+
+            {/* Refresh Button */}
+            <button onClick={fetchStats} style={{
+              background: "transparent",
+              border: "1px solid #30363d",
+              color: "#e6edf3",
+              padding: "6px 16px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontSize: "13px",
+              transition: "border-color 0.15s"
+            }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "#8b949e"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "#30363d"}
+            >
+              🔄 Refresh
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div style={{ padding: "32px", maxWidth: "1000px", margin: "0 auto" }}>
+      {/* ── Main Content ── */}
+      <div style={{
+        maxWidth: "1200px",
+        margin: "0 auto",
+        padding: "32px"
+      }}>
 
-        {/* Loading State */}
+        {/* Loading */}
         {loading && (
-          <div style={{ textAlign: "center", padding: "60px", color: "#666" }}>
-            <div style={{ fontSize: "40px" }}>⏳</div>
-            <div style={{ marginTop: "16px" }}>Loading dashboard...</div>
+          <div style={{ textAlign: "center", padding: "80px", color: "#8b949e" }}>
+            <div style={{ fontSize: "48px", marginBottom: "16px" }}>⏳</div>
+            <div>Loading dashboard...</div>
           </div>
         )}
 
-        {/* Error State */}
+        {/* Error */}
         {error && !loading && (
           <div style={{
-            background: "#fff0f0",
-            border: "1px solid #ffcdd2",
+            background: "#f8514922",
+            border: "1px solid #f8514944",
             borderRadius: "12px",
-            padding: "24px",
+            padding: "32px",
             textAlign: "center",
-            color: "#c62828"
+            color: "#f85149"
           }}>
-            <div style={{ fontSize: "40px" }}>⚠️</div>
-            <div style={{ marginTop: "12px", fontWeight: "600" }}>{error}</div>
-            <button
-              onClick={fetchStats}
-              style={{
-                marginTop: "16px",
-                background: "#c62828",
-                color: "white",
-                border: "none",
-                padding: "10px 24px",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontSize: "14px"
-              }}
-            >
-              Retry
-            </button>
+            <div style={{ fontSize: "48px", marginBottom: "12px" }}>⚠️</div>
+            <div style={{ fontWeight: "600", fontSize: "16px" }}>{error}</div>
+            <button onClick={fetchStats} style={{
+              marginTop: "16px",
+              background: "#f85149",
+              color: "white",
+              border: "none",
+              padding: "10px 24px",
+              borderRadius: "8px",
+              cursor: "pointer"
+            }}>Retry</button>
           </div>
         )}
 
-        {/* Stats Cards */}
         {stats && !loading && (
           <>
+            {/* ── Page Title ── */}
+            <div style={{ marginBottom: "28px" }}>
+              <h1 style={{
+                fontSize: "24px",
+                fontWeight: "700",
+                color: "#e6edf3"
+              }}>
+                Dashboard
+              </h1>
+              <p style={{
+                color: "#8b949e",
+                fontSize: "14px",
+                marginTop: "4px"
+              }}>
+                Powered by Groq + Llama 3.3 70B
+              </p>
+            </div>
+
+            {/* ── Stats Cards ── */}
             <div style={{
               display: "flex",
-              gap: "20px",
-              marginBottom: "32px",
+              gap: "16px",
+              marginBottom: "28px",
               flexWrap: "wrap"
             }}>
               <StatCard
                 title="Total PRs Reviewed"
                 value={stats.total_reviewed}
                 emoji="📋"
-                color="#0969da"
+                color="#79c0ff"
               />
               <StatCard
-                title="Bugs Caught"
-                value={stats.total_reviewed * 2}
-                emoji="🐛"
-                color="#cf222e"
+                title="Critical PRs"
+                value={criticalCount}
+                emoji="🚨"
+                color="#f85149"
+                subtitle="Needs immediate attention"
+              />
+              <StatCard
+                title="Avg Severity"
+                value={`${avgScore}/10`}
+                emoji="🎯"
+                color="#d29922"
               />
               <StatCard
                 title="Server Status"
-                value={stats.status === "healthy" ? "Live" : "Down"}
+                value="Live"
                 emoji="💚"
-                color="#1a7f37"
+                color="#3fb950"
+                subtitle="Auto-refresh every 10s"
               />
             </div>
 
-            {/* Charts Section */}
-            {stats && stats.reviews && stats.reviews.length > 0 && (
-            <div style={{ marginBottom: "32px" }}>
-
-              {/* Pie + Bar side by side */}
-              <div style={{
-                display: "flex",
-                gap: "20px",
-                marginBottom: "20px",
-                flexWrap: "wrap"
-            }}>
-                <RatingPieChart reviews={stats.reviews} />
-                <SeverityBarChart reviews={stats.reviews} />
+            {/* ── Charts ── */}
+            {stats.reviews && stats.reviews.length > 0 && (
+              <div style={{ marginBottom: "28px" }}>
+                <div style={{
+                  display: "flex",
+                  gap: "16px",
+                  marginBottom: "16px",
+                  flexWrap: "wrap"
+                }}>
+                  <RatingPieChart reviews={stats.reviews} />
+                  <SeverityBarChart reviews={stats.reviews} />
+                </div>
+                <PRTimelineChart reviews={stats.reviews} />
               </div>
+            )}
 
-              {/* Timeline full width */}
-              <PRTimelineChart reviews={stats.reviews} />
-              </div>
-              )}
-
-            {/* PR List */}
+            {/* ── PR List ── */}
             <div style={{
-              background: "white",
+              background: "#161b22",
+              border: "1px solid #30363d",
               borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
               overflow: "hidden"
             }}>
+              {/* List Header */}
               <div style={{
-                padding: "20px 24px",
-                borderBottom: "1px solid #f0f0f0",
+                padding: "16px 20px",
+                borderBottom: "1px solid #21262d",
                 display: "flex",
                 justifyContent: "space-between",
-                alignItems: "center"
+                alignItems: "center",
+                background: "#161b22"
               }}>
-                <div style={{ fontSize: "16px", fontWeight: "700", color: "#333" }}>
+                <div style={{
+                  fontWeight: "700",
+                  fontSize: "15px",
+                  color: "#e6edf3"
+                }}>
                   📝 Reviewed Pull Requests
                 </div>
-                <div style={{ fontSize: "12px", color: "#999" }}>
-                  Last updated: {lastUpdated}
+                <div style={{
+                  background: "#30363d",
+                  color: "#8b949e",
+                  padding: "2px 10px",
+                  borderRadius: "12px",
+                  fontSize: "13px"
+                }}>
+                  {stats.total_reviewed} total
                 </div>
               </div>
-              <PRList prs={stats.reviewed_prs} />
-            </div>
 
-            {/* Refresh Button */}
-            <div style={{ textAlign: "center", marginTop: "24px" }}>
-              <button
-                onClick={fetchStats}
-                style={{
-                  background: "#0969da",
-                  color: "white",
-                  border: "none",
-                  padding: "10px 28px",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: "600"
-                }}
-              >
-                🔄 Refresh
-              </button>
-              <div style={{ fontSize: "12px", color: "#999", marginTop: "8px" }}>
-                Auto-refreshes every 10 seconds
-              </div>
+              {/* PR Items */}
+              {stats.reviews && stats.reviews.length > 0 ? (
+                stats.reviews.map((review, index) => (
+                  <PRItem key={index} review={review} />
+                ))
+              ) : (
+                <div style={{
+                  textAlign: "center",
+                  padding: "60px",
+                  color: "#8b949e"
+                }}>
+                  <div style={{ fontSize: "40px", marginBottom: "12px" }}>🚀</div>
+                  <div>No PRs reviewed yet! Create a PR to get started.</div>
+                </div>
+              )}
             </div>
           </>
         )}
