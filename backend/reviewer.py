@@ -10,6 +10,31 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 # Diff bahut bada ho toh trim karo
 MAX_DIFF_CHARS = 3000
 
+def detect_language(diff: str) -> str:
+    """
+    Code diff dekh ke language automatically detect karo
+    """
+    # Python signs
+    if "def " in diff or "import " in diff or ".py" in diff:
+        return "python"
+    
+    # JavaScript signs
+    elif "const " in diff or "function " in diff or ".js" in diff:
+        return "javascript"
+    
+    # TypeScript signs
+    elif "interface " in diff or ".ts" in diff:
+        return "typescript"
+    
+    # Java signs
+    elif "public class" in diff or "void " in diff or ".java" in diff:
+        return "java"
+    
+    # Kuch samajh nahi aaya
+    else:
+        return "general"
+
+
 def trim_diff(diff: str) -> str:
     """
     Agar diff bahut bada hai toh sirf pehle 3000 chars lo
@@ -21,11 +46,15 @@ def trim_diff(diff: str) -> str:
     return diff
 
 
-def review_code(code_diff: str, language: str = "python") -> dict:
+def review_code(code_diff: str, language: str = None) -> dict:
     """
     Code diff lega aur AI se review karwayega.
     Returns: structured feedback as dictionary
     """
+    
+    if language is None:
+        language = detect_language(code_diff)
+        print(f"🔍 Detected language: {language}")
 
     # Empty diff check
     if not code_diff or len(code_diff.strip()) == 0:
@@ -130,3 +159,24 @@ def review_code(code_diff: str, language: str = "python") -> dict:
                     "rating": "needs_work",
                     "overall_feedback": f"Could not complete review: {str(e)}"
                 }
+                
+
+
+# -------- TEST --------
+if __name__ == "__main__":
+
+    # Ek sample buggy Python code
+    sample_diff = """
+        + const getUser = (userId) => {
+        +     const query = "SELECT * FROM users WHERE id = " + userId
+        +     const password = result.password
+        +     console.log("Password: " + password)
+        +     return result
+        + }
+    """
+
+    print("🔍 Reviewing code...\n")
+    review = review_code(sample_diff)
+
+    print("📋 REVIEW RESULT:")
+    print(json.dumps(review, indent=2))
