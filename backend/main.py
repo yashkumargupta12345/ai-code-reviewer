@@ -108,12 +108,21 @@ def post_github_comment(repo_full_name: str, pr_number: int, review: dict):
         "request_changes": "⚠️ Request Changes",
         "block": "🚫 Block — Do Not Merge!"
     }.get(merge, "⚠️ Request Changes")
+    
+    # PR Size section
+    size_info = review.get("pr_size", {})
+    size_section = ""
+    if size_info:
+        size_section = f"**PR Size:** {size_info.get('emoji', '🟡')} `{size_info.get('size', 'unknown').upper()}` ({size_info.get('total_lines', 0)} lines changed)\n"
+        if size_info.get('warning'):
+            size_section += f"\n> ⚠️ **Warning:** {size_info.get('warning')}\n"
 
     comment_body = f"""## 🤖 AI Code Review
 
 **Summary:** {review.get('summary', 'N/A')}
 
 **Rating:** {rating_emoji} `{review.get('rating', 'N/A').upper()}`
+{size_section}
 
 **Severity Score:** {score_emoji} `{score}/10`
 **Merge Status:** {merge_emoji}

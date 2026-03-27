@@ -35,6 +35,42 @@ def detect_language(diff: str) -> str:
         return "general"
 
 
+def analyze_pr_size(diff: str) -> dict:
+    """
+    PR kitna bada hai — check karo
+    """
+    # Changed lines count karo
+    added_lines = sum(1 for line in diff.split('\n') if line.startswith('+'))
+    removed_lines = sum(1 for line in diff.split('\n') if line.startswith('-'))
+    total_lines = added_lines + removed_lines
+
+    if total_lines > 500:
+        size = "too_large"
+        emoji = "🔴"
+        warning = f"PR is too large ({total_lines} lines) — consider splitting into smaller PRs!"
+    elif total_lines > 200:
+        size = "large"
+        emoji = "🟠"
+        warning = f"Large PR ({total_lines} lines) — review carefully!"
+    elif total_lines > 50:
+        size = "medium"
+        emoji = "🟡"
+        warning = None
+    else:
+        size = "small"
+        emoji = "🟢"
+        warning = None
+
+    return {
+        "total_lines": total_lines,
+        "added_lines": added_lines,
+        "removed_lines": removed_lines,
+        "size": size,
+        "emoji": emoji,
+        "warning": warning
+    }
+
+
 def trim_diff(diff: str) -> str:
     """
     Agar diff bahut bada hai toh sirf pehle 3000 chars lo
@@ -69,6 +105,10 @@ def review_code(code_diff: str, language: str = None) -> dict:
 
     # Diff trim karo agar bahut bada hai
     trimmed_diff = trim_diff(code_diff)
+    
+        # PR size analyze karo
+    pr_size = analyze_pr_size(code_diff)
+    print(f"📏 PR Size: {pr_size['emoji']} {pr_size['size']} ({pr_size['total_lines']} lines)")
 
     prompt = f"""
     You are a senior software engineer reviewing a pull request.
@@ -149,6 +189,8 @@ def review_code(code_diff: str, language: str = None) -> dict:
                     clean_response = clean_response[4:]
 
             review = json.loads(clean_response)
+            # Size info review mein add karo
+            review["pr_size"] = pr_size
             return review
 
         except json.JSONDecodeError:
@@ -179,13 +221,13 @@ def review_code(code_diff: str, language: str = None) -> dict:
 if __name__ == "__main__":
 
     # Ek sample buggy Python code
-    sample_diff = """
-        + const getUser = (userId) => {
-        +     const query = "SELECT * FROM users WHERE id = " + userId
-        +     const password = result.password
-        +     console.log("Password: " + password)
-        +     return result
-        + }
+    sample_diff = """\
++const getUser = (userId) => {
++    const query = "SELECT * FROM users WHERE id = " + userId
++    const password = result.password
++    console.log("Password: " + password)
++    return result
++}
     """
 
     print("🔍 Reviewing code...\n")
