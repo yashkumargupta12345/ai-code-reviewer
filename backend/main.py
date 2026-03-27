@@ -8,10 +8,17 @@ import requests
 import json
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from database import init_db, save_review, get_all_reviews, is_already_reviewed
 
 load_dotenv()
 
 app = FastAPI()
+
+# Server start hone pe database tables banao
+@app.on_event("startup")
+async def startup():
+    init_db()
+    print("🚀 Server started — Database ready!")
 
 app.add_middleware(
     CORSMiddleware,
@@ -198,6 +205,8 @@ async def process_pr(repo_full_name: str, pr_number: int):
         # Comment post karo
         print("💬 Posting comment...")
         post_github_comment(repo_full_name, pr_number, review)
+        # Database mein save karo
+        save_review(repo_full_name, pr_number, review)
 
     except Exception as e:
         print(f"💥 Error processing PR #{pr_number}: {e}")
@@ -233,12 +242,10 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks):
     pr_title = pr.get("title", "Unknown")
 
     # Duplicate check — same PR dobara review mat karo
-    pr_key = f"{repo_full_name}#{pr_number}"
-    if action == "opened" and pr_key in reviewed_prs:
-        print(f"⏭️ Already reviewed {pr_key} — skipping")
+    # Database se check karo
+    if is_already_reviewed(repo_full_name, pr_number):
+        print(f"⏭️ Already reviewed — skipping")
         return {"message": "Already reviewed"}
-
-    reviewed_prs.add(pr_key)
     print(f"🆕 New PR: #{pr_number} — {pr_title}")
 
     # Background mein process karo
@@ -260,8 +267,10 @@ async def root():
 # # ─── Stats Route — Frontend ke liye ──────────────────────────────────────────
 @app.get("/stats")
 async def get_stats():
+    reviews = get_all_reviews()
     return {
-        "total_reviewed": len(reviewed_prs),
-        "reviewed_prs": list(reviewed_prs),
+        "total_reviewed": len(reviews),
+        "reviewed_prs": [f"{r['repo_name']}#{r['pr_number']}" for r in reviews],
+        "reviews": reviews,
         "status": "healthy"
     }
