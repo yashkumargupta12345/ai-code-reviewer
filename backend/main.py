@@ -78,6 +78,36 @@ def post_github_comment(repo_full_name: str, pr_number: int, review: dict):
         "needs_work": "⚠️",
         "critical": "🚨"
     }.get(review.get("rating", "needs_work"), "⚠️")
+    
+    # Severity score emoji
+    score = review.get("severity_score", 5)
+    if score <= 3:
+        score_emoji = "🟢"
+    elif score <= 6:
+        score_emoji = "🟡"
+    elif score <= 8:
+        score_emoji = "🟠"
+    else:
+        score_emoji = "🔴"
+
+        # Severity score emoji
+    score = review.get("severity_score", 5)
+    if score <= 3:
+        score_emoji = "🟢"
+    elif score <= 6:
+        score_emoji = "🟡"
+    elif score <= 8:
+        score_emoji = "🟠"
+    else:
+        score_emoji = "🔴"
+
+    # Merge recommendation emoji
+    merge = review.get("merge_recommendation", "request_changes")
+    merge_emoji = {
+        "approve": "✅ Approve",
+        "request_changes": "⚠️ Request Changes",
+        "block": "🚫 Block — Do Not Merge!"
+    }.get(merge, "⚠️ Request Changes")
 
     comment_body = f"""## 🤖 AI Code Review
 
@@ -85,6 +115,18 @@ def post_github_comment(repo_full_name: str, pr_number: int, review: dict):
 
 **Rating:** {rating_emoji} `{review.get('rating', 'N/A').upper()}`
 
+**Severity Score:** {score_emoji} `{score}/10`
+**Merge Status:** {merge_emoji}
+```
+
+---
+
+## 🧪 Test Karo — Naya PR Banao
+
+GitHub pe ek naya PR banao aur dekho comment mein yeh dikhta hai:
+```
+⭐ Severity Score: 🔴 9/10
+🔀 Merge Status: 🚫 Block — Do Not Merge!
 # ---
 
 # ### 🐛 Bugs Found

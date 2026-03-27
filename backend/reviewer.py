@@ -81,18 +81,22 @@ def review_code(code_diff: str, language: str = None) -> dict:
     Respond ONLY in this exact JSON format, nothing else:
     {{
         "summary": "One line summary of what this code does",
+        "severity_score": 5,
+        "merge_recommendation": "approve/request_changes/block",
         "bugs": [
             {{
                 "line": "approximate line or code snippet",
                 "issue": "what is wrong",
-                "fix": "how to fix it"
+                "fix": "how to fix it",
+                "severity": "low/medium/high/critical"
             }}
         ],
         "security_issues": [
             {{
                 "line": "approximate line or code snippet",
                 "issue": "what is the security risk",
-                "fix": "how to fix it"
+                "fix": "how to fix it",
+                "severity": "low/medium/high/critical"
             }}
         ],
         "improvements": [
@@ -103,6 +107,17 @@ def review_code(code_diff: str, language: str = None) -> dict:
         "rating": "good/needs_work/critical",
         "overall_feedback": "2-3 line overall feedback"
     }}
+    
+    Severity score guide:
+    1-3: Clean code, minor issues
+    4-6: Some issues, needs attention
+    7-8: Serious issues, needs fixes before merge
+    9-10: Critical issues, do not merge!
+    
+    Merge recommendation guide:
+    approve: Code is good to merge
+    request_changes: Issues found but not blocking
+    block: Critical issues, must fix before merge
     """
 
     # Retry logic — agar Groq fail kare toh 3 baar try karo
@@ -160,8 +175,6 @@ def review_code(code_diff: str, language: str = None) -> dict:
                     "overall_feedback": f"Could not complete review: {str(e)}"
                 }
                 
-
-
 # -------- TEST --------
 if __name__ == "__main__":
 
