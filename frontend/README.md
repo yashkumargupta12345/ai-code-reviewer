@@ -5,7 +5,7 @@
 ![Demo](demo.gif)
 
 ## 🌐 Live Demo
-- **Frontend Dashboard:** https://ai-code-reviewer-ci09mxnmy-yashkumargupta12345s-projects.vercel.app/
+- **Frontend Dashboard:** https://ai-code-reviewer-six-virid.vercel.app/
 - **Backend API:** https://ai-code-reviewer-backend-lrfl.onrender.com
 
 ---
