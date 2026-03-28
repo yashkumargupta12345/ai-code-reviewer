@@ -23,13 +23,15 @@ export function RatingPieChart({ reviews }) {
 
   return (
     <div style={{
-      background: "#161b22",
-      border: "1px solid #30363d",
-      borderRadius: "12px",
+      background: "rgba(255,255,255,0.05)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: "16px",
       padding: "24px",
       boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
       flex: 1,
-      color: "#e6edf3"
+      color: "rgba(255,255,255,0.8)"
     }}>
       <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px", color: "#8b949e" }}>
         📊 Rating Distribution
@@ -69,13 +71,15 @@ export function SeverityBarChart({ reviews }) {
 
   return (
     <div style={{
-      background: "#161b22",
-      border: "1px solid #30363d",
-      borderRadius: "12px",
+      background: "rgba(255,255,255,0.05)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: "16px",
       padding: "24px",
       boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
       flex: 1,
-      color: "#e6edf3"  
+      color: "rgba(255,255,255,0.8)"  
     }}>
       <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px", color: "#8b949e" }}>
         🎯 Severity Scores
@@ -114,13 +118,15 @@ export function PRTimelineChart({ reviews }) {
 
   return (
     <div style={{
-      background: "#161b22",
-      border: "1px solid #30363d",
-      borderRadius: "12px",
+      background: "rgba(255,255,255,0.05)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: "16px",
       padding: "24px",
       boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
       width: "100%",
-      color: "#e6edf3" 
+      color: "rgba(255,255,255,0.8)"
     }}>
       <div style={{ fontSize: "16px", fontWeight: "700", marginBottom: "16px", color: "#8b949e" }}>
         📈 PRs Reviewed Over Time
