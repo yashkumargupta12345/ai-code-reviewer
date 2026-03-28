@@ -134,8 +134,6 @@ def post_github_comment(repo_full_name: str, pr_number: int, review: dict):
 **Severity Score:** {score_emoji} `{score}/10`
 **Merge Status:** {merge_emoji}
 
-⭐ Severity Score: 🔴 9/10
-🔀 Merge Status: 🚫 Block — Do Not Merge!
 # ---
 
 # ### 🐛 Bugs Found

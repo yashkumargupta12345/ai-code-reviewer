@@ -61,6 +61,111 @@ function StatCard({ title, value, emoji, color, subtitle }) {
 }
 
 // ─── PR List Item ─────────────────────────────────────────────────────────────
+
+// ─── Repo Group Component ─────────────────────────────────────────────────────
+function RepoGroup({ repoName, reviews }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const criticalCount = reviews.filter(r => r.rating === "critical").length;
+  const avgScore = (reviews.reduce((a, b) => a + b.severity_score, 0) / reviews.length).toFixed(1);
+  const avgScoreColor = avgScore >= 8 ? "#f85149" :
+                        avgScore >= 5 ? "#d29922" : "#3fb950";
+
+  return (
+    <div style={{
+      background: "#161b22",
+      border: "1px solid #30363d",
+      borderRadius: "12px",
+      overflow: "hidden",
+      marginBottom: "16px"
+    }}>
+      {/* Repo Header */}
+      <div
+        onClick={() => setCollapsed(!collapsed)}
+        style={{
+          padding: "16px 20px",
+          borderBottom: collapsed ? "none" : "1px solid #21262d",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          cursor: "pointer",
+          transition: "background 0.15s"
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = "#1c2128"}
+        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+      >
+        {/* Left — Repo Name */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <span style={{ fontSize: "18px" }}>📁</span>
+          <div>
+            <div style={{
+              fontWeight: "700",
+              fontSize: "15px",
+              color: "#79c0ff"
+            }}>
+              {repoName}
+            </div>
+            <div style={{
+              fontSize: "12px",
+              color: "#8b949e",
+              marginTop: "2px"
+            }}>
+              {reviews.length} PR{reviews.length > 1 ? "s" : ""} reviewed
+            </div>
+          </div>
+        </div>
+
+        {/* Right — Stats + Collapse */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {/* Critical badge */}
+          {criticalCount > 0 && (
+            <div style={{
+              background: "#f8514922",
+              border: "1px solid #f8514944",
+              color: "#f85149",
+              padding: "3px 10px",
+              borderRadius: "12px",
+              fontSize: "12px",
+              fontWeight: "600"
+            }}>
+              🚨 {criticalCount} Critical
+            </div>
+          )}
+
+          {/* Avg Score */}
+          <div style={{
+            background: `${avgScoreColor}22`,
+            border: `1px solid ${avgScoreColor}44`,
+            color: avgScoreColor,
+            padding: "3px 10px",
+            borderRadius: "12px",
+            fontSize: "12px",
+            fontWeight: "600"
+          }}>
+            Avg: {avgScore}/10
+          </div>
+
+          {/* Collapse arrow */}
+          <span style={{
+            color: "#8b949e",
+            fontSize: "14px",
+            transition: "transform 0.2s",
+            transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)"
+          }}>
+            ▼
+          </span>
+        </div>
+      </div>
+
+      {/* PR List — Collapsible */}
+      {!collapsed && reviews.map((review, index) => (
+        <PRItem key={index} review={review} />
+      ))}
+    </div>
+  );
+}
+
+
 function PRItem({ review }) {
   const ratingColor = {
     good: "#3fb950",
@@ -408,55 +513,75 @@ function Dashboard() {
             )}
 
             {/* ── PR List ── */}
-            <div style={{
-              background: "#161b22",
-              border: "1px solid #30363d",
-              borderRadius: "12px",
-              overflow: "hidden"
-            }}>
-              {/* List Header */}
-              <div style={{
-                padding: "16px 20px",
-                borderBottom: "1px solid #21262d",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                background: "#161b22"
-              }}>
+            {/* ── Multi Repo PR List ── */}
+            {stats.reviews && stats.reviews.length > 0 && (
+              <div>
+                {/* Section Header */}
                 <div style={{
-                  fontWeight: "700",
-                  fontSize: "15px",
-                  color: "#e6edf3"
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "16px"
                 }}>
-                  📝 Reviewed Pull Requests
+                  <h2 style={{
+                    fontSize: "16px",
+                    fontWeight: "700",
+                    color: "#e6edf3"
+                  }}>
+                    📝 Reviewed Pull Requests
+                  </h2>
+                  <div style={{
+                    background: "#30363d",
+                    color: "#8b949e",
+                    padding: "3px 12px",
+                    borderRadius: "12px",
+                    fontSize: "13px"
+                  }}>
+                    {Object.keys(
+                      stats.reviews.reduce((acc, r) => {
+                        acc[r.repo_name] = true;
+                        return acc;
+                      }, {})
+                    ).length} repos • {stats.total_reviewed} PRs
+                  </div>
                 </div>
-                <div style={{
-                  background: "#30363d",
-                  color: "#8b949e",
-                  padding: "2px 10px",
-                  borderRadius: "12px",
-                  fontSize: "13px"
-                }}>
-                  {stats.total_reviewed} total
+
+                {/* Repo Groups */}
+                {Object.entries(
+                  stats.reviews.reduce((acc, review) => {
+                    if (!acc[review.repo_name]) acc[review.repo_name] = [];
+                    acc[review.repo_name].push(review);
+                    return acc;
+                  }, {})
+                ).map(([repoName, repoReviews]) => (
+                  <RepoGroup
+                    key={repoName}
+                    repoName={repoName}
+                    reviews={repoReviews}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Empty State */}
+            {(!stats.reviews || stats.reviews.length === 0) && (
+              <div style={{
+                background: "#161b22",
+                border: "1px solid #30363d",
+                borderRadius: "12px",
+                textAlign: "center",
+                padding: "60px",
+                color: "#8b949e"
+              }}>
+                <div style={{ fontSize: "48px", marginBottom: "16px" }}>🚀</div>
+                <div style={{ fontSize: "16px", fontWeight: "600", color: "#e6edf3" }}>
+                  No PRs reviewed yet!
+                </div>
+                <div style={{ fontSize: "14px", marginTop: "8px" }}>
+                  Add webhook to any GitHub repo and create a PR to get started.
                 </div>
               </div>
-
-              {/* PR Items */}
-              {stats.reviews && stats.reviews.length > 0 ? (
-                stats.reviews.map((review, index) => (
-                  <PRItem key={index} review={review} />
-                ))
-              ) : (
-                <div style={{
-                  textAlign: "center",
-                  padding: "60px",
-                  color: "#8b949e"
-                }}>
-                  <div style={{ fontSize: "40px", marginBottom: "12px" }}>🚀</div>
-                  <div>No PRs reviewed yet! Create a PR to get started.</div>
-                </div>
-              )}
-            </div>
+            )}
           </>
         )}
       </div>
