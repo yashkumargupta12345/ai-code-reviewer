@@ -289,6 +289,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const RATE_LIMIT = 10;
 
   const fetchStats = async () => {
     try {
@@ -493,6 +494,13 @@ function Dashboard() {
                 emoji="💚"
                 color="#3fb950"
                 subtitle="Auto-refresh every 10s"
+              />
+              <StatCard
+                title="Rate Limit"
+                value={`${RATE_LIMIT}/min`}
+                emoji="🚦"
+                color="#a371f7"
+                subtitle="Per repo limit"
               />
             </div>
 

@@ -9,6 +9,14 @@ import json
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db, save_review, get_all_reviews, is_already_reviewed
+from collections import defaultdict
+import time
+
+# Rate limiting — har repo ke liye request timestamps store karo
+rate_limit_store = defaultdict(list)
+RATE_LIMIT = 10        # Max requests
+RATE_WINDOW = 60       # Per 60 seconds
+
 
 load_dotenv()
 
@@ -162,6 +170,29 @@ def post_github_comment(repo_full_name: str, pr_number: int, review: dict):
     return response.status_code
 
 
+def is_rate_limited(repo: str) -> bool:
+    """
+    Sliding window rate limiting —
+    ek repo 60 seconds mein 10 se zyada requests nahi kar sakta
+    """
+    now = time.time()
+    
+    # Purani requests hata do (60 sec se purani)
+    rate_limit_store[repo] = [
+        t for t in rate_limit_store[repo]
+        if now - t < RATE_WINDOW
+    ]
+    
+    # Limit check karo
+    if len(rate_limit_store[repo]) >= RATE_LIMIT:
+        print(f"🚫 Rate limit hit for {repo}!")
+        return True
+    
+    # Current request add karo
+    rate_limit_store[repo].append(now)
+    return False
+
+
 # # ─── Helper: Webhook signature verify karo ────────────────────────────────────
 def verify_signature(payload: bytes, signature: str) -> bool:
     if not WEBHOOK_SECRET:
@@ -231,6 +262,13 @@ async def github_webhook(request: Request, background_tasks: BackgroundTasks):
     pr_number = pr.get("number")
     repo_full_name = data["repository"]["full_name"]
     pr_title = pr.get("title", "Unknown")
+    
+    # Rate limit check
+    if is_rate_limited(repo_full_name):
+        return {
+            "message": "Rate limit exceeded — try again later!",
+            "limit": f"{RATE_LIMIT} requests per {RATE_WINDOW} seconds"
+        }
 
     # Duplicate check — same PR dobara review mat karo
     # Database se check karo
@@ -259,9 +297,22 @@ async def root():
 @app.get("/stats")
 async def get_stats():
     reviews = get_all_reviews()
+    
+    # Rate limit status har repo ka
+    now = time.time()
+    rate_status = {}
+    for repo, timestamps in rate_limit_store.items():
+        recent = [t for t in timestamps if now - t < RATE_WINDOW]
+        rate_status[repo] = {
+            "requests_in_window": len(recent),
+            "limit": RATE_LIMIT,
+            "remaining": max(0, RATE_LIMIT - len(recent))
+        }
+    
     return {
         "total_reviewed": len(reviews),
         "reviewed_prs": [f"{r['repo_name']}#{r['pr_number']}" for r in reviews],
         "reviews": reviews,
+        "rate_limit_status": rate_status,
         "status": "healthy"
     }
