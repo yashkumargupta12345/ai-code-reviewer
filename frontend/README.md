@@ -1,70 +1,159 @@
-# Getting Started with Create React App
+# 🤖 AI Code Reviewer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> Automatically reviews your GitHub Pull Requests using AI and posts detailed feedback as comments — just like a senior developer!
 
-## Available Scripts
+![Demo](demo.gif)
 
-In the project directory, you can run:
+## 🌐 Live Demo
+- **Frontend Dashboard:** https://ai-code-reviewer-ci09mxnmy-yashkumargupta12345s-projects.vercel.app/
+- **Backend API:** https://ai-code-reviewer-backend-lrfl.onrender.com
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## ✨ Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- 🔍 **Auto Language Detection** — Python, JavaScript, Java, TypeScript
+- 🐛 **Bug Detection** — catches common bugs and errors
+- 🔐 **Security Analysis** — SQL injection, hardcoded secrets, and more
+- 🎯 **Severity Scoring** — 1-10 score + merge recommendation
+- 📏 **PR Size Warning** — flags oversized PRs (500+ lines)
+- 📊 **Interactive Dashboard** — charts, stats, multi-repo support
+- 💾 **Persistent Storage** — PostgreSQL database
+- 🚦 **Rate Limiting** — sliding window, 10 req/min per repo
+- ⚡ **Async Architecture** — instant webhook response
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🛠️ Tech Stack
 
-### `npm run build`
+| Layer | Technology |
+|-------|-----------|
+| AI/LLM | Groq API + Llama 3.3 70B |
+| Backend | Python, FastAPI, BackgroundTasks |
+| Database | PostgreSQL, SQLAlchemy |
+| Frontend | React.js, Recharts |
+| Integration | GitHub Webhooks, REST APIs |
+| Security | HMAC SHA-256 |
+| Deployment | Render (backend), Vercel (frontend) |
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+---
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## 🏗️ Architecture
+```
+GitHub PR opened
+      ↓
+Webhook fires → FastAPI Backend (<100ms response)
+      ↓
+Background Task starts
+      ↓
+Fetch PR diff from GitHub API
+      ↓
+Auto-detect language
+      ↓
+Groq LLM analyzes code (Llama 3.3 70B)
+      ↓
+Severity score + merge recommendation generated
+      ↓
+Comment posted on GitHub PR 🎉
+      ↓
+Saved to PostgreSQL database
+      ↓
+Dashboard updates automatically
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+---
 
-### `npm run eject`
+## 🚀 Local Setup
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Prerequisites
+- Python 3.10+
+- Node.js 18+
+- Groq API Key — free at console.groq.com
+- GitHub Personal Access Token
+- PostgreSQL database (free on render.com)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Backend Setup
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Create `.env` file:
+```
+GROQ_API_KEY=your_groq_key
+GITHUB_TOKEN=your_github_token
+WEBHOOK_SECRET=your_secret
+DATABASE_URL=your_postgresql_url
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Run server:
+```bash
+uvicorn main:app --reload --port 8000
+```
 
-## Learn More
+### Frontend Setup
+```bash
+cd frontend
+npm install
+npm start
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### GitHub Webhook Setup
+1. Go to your repo → Settings → Webhooks
+2. Add webhook URL:
+```
+https://your-backend-url/webhook
+```
+3. Content type: `application/json`
+4. Secret: same as `WEBHOOK_SECRET`
+5. Events: ✅ Pull requests
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## 📊 How It Works
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+1. **Webhook Trigger** — GitHub sends PR data to FastAPI server
+2. **Instant Response** — Server returns 200 OK immediately
+3. **Background Processing** — Diff fetched, language detected
+4. **AI Analysis** — Groq LLM reviews code with structured prompt
+5. **Severity Scoring** — 1-10 score + merge recommendation generated
+6. **Comment Posted** — Formatted review posted on PR
+7. **Database Saved** — Review stored in PostgreSQL
+8. **Dashboard Updated** — Charts and stats refresh automatically
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 🔒 Security Features
 
-### Making a Progressive Web App
+- ✅ HMAC SHA-256 webhook signature verification
+- ✅ Environment variables for all secrets
+- ✅ Rate limiting — 10 requests/minute per repo
+- ✅ No sensitive data in codebase
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
+## 🗂️ Project Structure
+```
+ai-code-reviewer/
+│
+├── backend/
+│   ├── main.py          ← Server + Webhook handler
+│   ├── reviewer.py      ← AI Brain (Groq + Llama)
+│   ├── database.py      ← PostgreSQL models + queries
+│   └── requirements.txt
+│
+└── frontend/
+    └── src/
+        └── components/
+            ├── Dashboard.js  ← Main dashboard
+            └── Charts.js     ← Recharts visualizations
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## 👨‍💻 Author
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+**Yash Kumar Gupta**
+---
